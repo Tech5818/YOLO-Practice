@@ -1,6 +1,9 @@
 from fastapi import FastAPI
+from router.yolo import yolo_router
 
 app = FastAPI()
+
+app.include_router(yolo_router, prefix="/yolo")
 
 @app.get("/")
 async def home():
