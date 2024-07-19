@@ -1,20 +1,22 @@
-from fastapi import APIRouter, File, UploadFile, Response
+from fastapi import APIRouter, UploadFile, Response
 from fastapi.responses import JSONResponse
 from PIL import Image, ImageDraw
-import os
 import io
 import torch
 from pathlib import Path
+import sys
 
 yolo_router = APIRouter(tags=["YOLO"])
 # 모델 경로 설정 (yolov5 디렉토리 내의 yolov5s.pt 파일 사용 예정)
 model_path = Path(__file__).parent.parent / 'yolo' / 'yolov5'
-weights_path = model_path / 'runs' / 'train' / 'result' / 'weights' / 'best.pt'
-model = torch.hub.load(model_path, 'custom', path=weights_path, source='local')
+print(model_path)
+weights_path = model_path / 'runs' / 'train' / 'yolo5_result5' / 'weights' / 'best.pt'
+
+sys.path.append(str(model_path))
+
+model = torch.hub.load(str(model_path), 'custom', path=weights_path, source='local') 
 
 def get_box(results, img):
-  
-    
     # 결과 이미지에 바운딩 박스와 라벨 추가
     draw = ImageDraw.Draw(img)
     for result in results.xyxy[0]:
@@ -25,9 +27,9 @@ def get_box(results, img):
         result[3]   # ymax
       ]  # 바운딩 박스 좌표 (xmin, ymin, xmax, ymax) 
       if int(result[-1].item()) == 1:  # Plastic
-        draw.rectangle(bbox, outline="blue", width=2)
+        draw.rectangle(bbox, outline="blue", width=5)
       elif int(result[-1].item()) == 0:  # Paper
-        draw.rectangle(bbox, outline="red", width=2)
+        draw.rectangle(bbox, outline="red", width=5)
 
       # 라벨 텍스트 추가
       label_text = model.names[int(result[-1].item())]
@@ -41,7 +43,7 @@ def get_box(results, img):
     return img_byte_arr
 
 # 데이터셋의 클래스 이름을 모델에 설정
-model.names = ['Paper', 'Plastic']  # 실제 데이터셋의 클래스 이름으로 변경해야 함
+model.names = ['Plastic']  # 실제 데이터셋의 클래스 이름으로 변경해야 함
 
 @yolo_router.post("/predict")
 async def predict(file: UploadFile):
@@ -54,8 +56,9 @@ async def predict(file: UploadFile):
   try:
     # 객체 탐지
     results = model(img)
-    labels = [model.names[int(label)] for label in results.xyxy[0][:, -1].tolist()]
 
+    labels = [model.names[int(label)] for label in results.xyxy[0][:, -1].tolist()]
+    print(labels)
     # img_byte_arr = get_box(results, img)
     # return Response(content=img_byte_arr.getvalue(), media_type="image/jpeg")
     return JSONResponse(content={"labels": labels})

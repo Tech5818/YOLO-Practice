@@ -2,12 +2,12 @@ train: ../train/images
 val: ../valid/images
 test: ../test/images
 
-nc: 2
-names: ['Paper', 'Plastic']
+nc: 1
+names: ['Plastic']
 
 roboflow:
-  workspace: practice-75ijf
-  project: last-ojn68
-  version: 1
+  workspace: revo-hufkh
+  project: revo2
+  version: 2
   license: CC BY 4.0
-  url: https://universe.roboflow.com/practice-75ijf/last-ojn68/dataset/1
+  url: https://universe.roboflow.com/revo-hufkh/revo2/dataset/2
